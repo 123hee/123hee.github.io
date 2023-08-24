@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>D3.js Chart</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+  <script>
+    const chart = {
+      create: (data) => {
+        const width = 928;
+        const height = width;
+        const radius = width / 6;
+        const color = d3.scaleOrdinal(d3.quantize(d3.interpolateRainbow, data.children.length + 1));
+        
+        const hierarchy = d3.hierarchy(data)
+          .sum(d => d.value)
+          .sort((a, b) => b.value - a.value);
+        
+        const root = d3.partition()
+          .size([2 * Math.PI, hierarchy.height + 1])
+          (hierarchy);
+          
+        root.each(d => d.current = d);
+        
+        const arc = d3.arc()
+          .startAngle(d => d.x0)
+          .endAngle(d => d.x1)
+          .padAngle(d => Math.min((d.x1 - d.x0) / 2, 0.005))
+          .padRadius(radius * 1.5)
+          .innerRadius(d => d.y0 * radius)
+          .outerRadius(d => Math.max(d.y0 * radius, d.y1 * radius - 1));
+    
+        const svg = d3.create("svg")
+          .attr("viewBox", [-width / 2, -height / 2, width, width])
+          .style("font", "10px sans-serif");
+          
+        const path = svg.append("g")
+          .selectAll("path")
+          .data(root.descendants().slice(1))
+          .join("path")
+            .attr("fill", d => { while (d.depth > 1) d = d.parent; return color(d.data.name); })
+            .attr("fill-opacity", d => arcVisible(d.current) ? (d.children ? 0.6 : 0.4) : 0)
+            .attr("pointer-events", d => arcVisible(d.current) ? "auto" : "none")
+            .attr("d", d => arc(d.current));
+            
+        path.filter(d => d.children)
+          .style("cursor", "pointer")
+          .on("click", clicked);
+          
+        const format = d3.format(",d");
+        
+        path.append("title")
+          .text(d => `${d.ancestors().map(d => d.data.name).reverse().join("/")}\n${format(d.value)}`);
+
+        const label = svg.append("g")
+          .attr("pointer-events", "none")
+          .attr("text-anchor", "middle")
+          .style("user-select", "none")
+          .selectAll("text")
+          .data(root.descendants().slice(1))
+          .join("text")
+            .attr("dy", "0.35em")
+            .attr("fill-opacity", d => +labelVisible(d.current))
+            .attr("transform", d => labelTransform(d.current))
+            .text(d => d.data.name);
+
+        const parent = svg.append("circle")
+          .datum(root)
+          .attr("r", radius)
+          .attr("fill", "none")
+          .attr("pointer-events", "all")
+          .on("click", clicked);
+
+        function clicked(event, p) {
+          parent.datum(p.parent || root);
+
+          root.each(d => d.target = {
+            x0: Math.max(0, Math.min(1, (d.x0 - p.x0) / (p.x1 - p.x0))) * 2 * Math.PI,
+            x1: Math.max(0, Math.min(1, (d.x1 - p.x0) / (p.x1 - p.x0))) * 2 * Math.PI,
+            y0: Math.max(0, d.y0 - p.depth),
+            y1: Math.max(0, d.y1 - p.depth)
+          });
+
+          const t = svg.transition().duration(750);
+
+          path.transition(t)
+            .tween("data", d => {
+              const i = d3.interpolate(d.current, d.target);
+              return t => d.current = i(t);
+            })
+            .filter(function(d) {
+              return +this.getAttribute("fill-opacity") || arcVisible(d.target);
+            })
+            .attr("fill-opacity", d => arcVisible(d.target) ? (d.children ? 0.6 : 0.4) : 0)
+            .attr("pointer-events", d => arcVisible(d.target) ? "auto" : "none")
+            .attrTween("d", d => () => arc(d.current));
+
+          label.filter(function(d) {
+              return +this.getAttribute("fill-opacity") || labelVisible(d.target);
+            })
+            .transition(t)
+            .attr("fill-opacity", d => +labelVisible(d.target))
+            .attrTween("transform", d => () => labelTransform(d.current));
+        }
+
+        function arcVisible(d) {
+          return d.y1 <= 3 && d.y0 >= 1 && d.x1 > d.x0;
+        }
+
+        function labelVisible(d) {
+          return d.y1 <= 3 && d.y0 >= 1 && (d.y1 - d.y0) * (d.x1 - d.x0) > 0.03;
+        }
+
+        function labelTransform(d) {
+          const x = (d.x0 + d.x1) / 2 * 180 / Math.PI;
+          const y = (d.y0 + d.y1) / 2 * radius;
+          return `rotate(${x - 90}) translate(${y},0) rotate(${x < 180 ? 0 : 180})`;
+        }
+
+        document.body.appendChild(svg.node());
+      }
+    };
+
+
+
+
+
+    
+    const data = {
+      name: 'discipline',
+      children:[
+        {
+        name: 'Arts and Humanities',
+          children: [
+            {
+              name: 'Arts',
+              children: [
+                {'name': 'Fine Arts & Architecture', 'value': 2935}, {'name': 'Performing Arts', 'value': 2088}
+              ]
+            },
+            {
+              name: 'Humanities',
+              children: [
+                {'name': 'Agricult & Food Science', 'value': 35938}, {'name': 'Botany', 'value': 34243}, {'name': 'Dairy & Animal Science', 'value': 7687}, {'name': 'Ecology', 'value': 11946}, {'name': 'Entomology', 'value': 9053}, {'name': 'General Biology', 'value': 4052}, {'name': 'General Zoology', 'value': 8958}, {'name': 'Marine Biology & Hydrobiology', 'value': 14178}, {'name': 'Miscellaneous Biology', 'value': 3825}, {'name': 'Miscellaneous Zoology', 'value': 3610}
+              ]
+            }
+          ]
+        },
+
+        {name:'Natural Sciences',
+          children: [
+            {
+              name: 'Biology',
+              children: [
+                {'name': 'Anatomy & Morphology', 'value': 1898}, {'name': 'Biochemistry & Molecular Biology', 'value': 68474}, {'name': 'Biomedical Engineering', 'value': 9434}, {'name': 'Biophysics', 'value': 3476}, {'name': 'Cellular Biology Cytology & Histology', 'value': 15242}, {'name': 'Embryology', 'value': 2142}, {'name': 'General Biomedical Research', 'value': 48282}, {'name': 'Genetics & Heredity', 'value': 22641}, {'name': 'Microbiology', 'value': 21449}, {'name': 'Microscopy', 'value': 1329}, {'name': 'Miscellaneous Biomedical Research', 'value': 4912}, {'name': 'Nutrition & Dietetic', 'value': 7788}, {'name': 'Parasitology', 'value': 4509}, {'name': 'Physiology', 'value': 11662}, {'name': 'Virology', 'value': 7450}
+              ]
+            },
+            {
+              name: 'Chemistry',
+              children: [
+                {'name': 'Analytical Chemistry', 'value': 20684}, {'name': 'Applied Chemistry', 'value': 4482}, {'name': 'General Chemistry', 'value': 46729}, {'name': 'Inorganic & Nuclear Chemistry', 'value': 13733}, {'name': 'Organic Chemistry', 'value': 28040}, {'name': 'Physical Chemistry', 'value': 53846}, {'name': 'Polymers', 'value': 18881}
+              ]
+            },
+            {
+              name: 'Earth and Space',
+              children: [
+                {'name': 'Addictive Diseases', 'value': 3312}, {'name': 'Allergy', 'value': 2222}, {'name': 'Anesthesiology', 'value': 4925}, {'name': 'Arthritis & Rheumatology', 'value': 5531}, {'name': 'Cancer', 'value': 32817}, {'name': 'Cardiovascular System', 'value': 23987}, {'name': 'Dentistry', 'value': 9569}, {'name': 'Dermatology & Venerial Disease', 'value': 8898}, {'name': 'Endocrinology', 'value': 16094}, {'name': 'Environmental & Occupational Health', 'value': 7513}, {'name': 'Fertility', 'value': 3973}, {'name': 'Gastroenterology', 'value': 12193}, {'name': 'General & Internal Medicine', 'value': 52228}, {'name': 'Geriatrics', 'value': 2301}, {'name': 'Hematology', 'value': 10203}, {'name': 'Immunology', 'value': 31965}, {'name': 'Miscellaneous Clinical Medicine', 'value': 6870}, {'name': 'Nephrology', 'value': 4211}, {'name': 'Neurology & Neurosurgery', 'value': 51679}, {'name': 'Obstetrics & Gynecology', 'value': 9592}, {'name': 'Ophthalmology', 'value': 10102}, {'name': 'Orthopedics', 'value': 9349}, {'name': 'Otorhinolaryngology', 'value': 6811}, {'name': 'Pathology', 'value': 8859}, {'name': 'Pediatrics', 'value': 10698}, {'name': 'Pharmacology', 'value': 44689}, {'name': 'Pharmacy', 'value': 5121}, {'name': 'Psychiatry', 'value': 12969}, {'name': 'Radiology & Nuclear Medicine', 'value': 18977}, {'name': 'Respiratory System', 'value': 6663}, {'name': 'Surgery', 'value': 26550}, {'name': 'Tropical Medicine', 'value': 3813}, {'name': 'Urology', 'value': 8697}, {'name': 'Veterinary Medicine', 'value': 18320}
+              ]
+            },
+            {
+              name: 'Physics',
+              children: [
+                {'name': 'Aerospace Technology', 'value': 4186}, {'name': 'Chemical Engineering', 'value': 19918}, {'name': 'Civil Engineering', 'value': 7457}, {'name': 'Computers', 'value': 30511}, {'name': 'Electrical Engineering & Electronics', 'value': 43574}, {'name': 'General Engineering', 'value': 1833}, {'name': 'Industrial Engineering', 'value': 2402}, {'name': 'Materials Science', 'value': 47340}, {'name': 'Mechanical Engineering', 'value': 19491}, {'name': 'Metals & Metallurgy', 'value': 18678}, {'name': 'Miscellaneous Engineering & Technology', 'value': 9220}, {'name': 'Nuclear Technology', 'value': 7017}, {'name': 'Operations Research', 'value': 2157}
+              ]
+            },
+            {
+              name: 'Mathematics',
+              children: [
+                {'name': 'Astronomy & Astrophysics', 'value': 20718}, {'name': 'Earth & planetary Science', 'value': 21254}, {'name': 'Environmental Science', 'value': 26910}, {'name': 'Geology', 'value': 16370}, {'name': 'Meteorology & Atmospheric Science', 'value': 8109}, {'name': 'Oceanography & Limnology', 'value': 6389}
+              ]
+            }
+         ]
+        },
+
+
+        {name:'Medical Sciences',
+          children:[
+            {name: 'Biomedical Research',
+              children: [
+                {'name': 'Social Sciences, Biomedical', 'value': 1313}, {'name': 'Geriatrics & Gerontology', 'value': 2298}, {'name': 'Health Policy & Services', 'value': 5383}, {'name': 'Nursing', 'value': 4734}, {'name': 'Public Health', 'value': 8848}, {'name': 'Rehabilitation', 'value': 3832}, {'name': 'Speech-Language Pathology and Audiology', 'value': 1366}, {'name': 'Social Studies of Medicine', 'value': 186}
+              ]
+            },
+            {
+              name: 'Clinical Medicine',
+              children: [
+                {'name': 'History', 'value': 7407}, {'name': 'Language & Linguistics', 'value': 4937}, {'name': 'Miscellaneous Humanities', 'value': 3280}, {'name': 'Philosophy', 'value': 4392}, {'name': 'Religion', 'value': 2789}, {'name': 'Literature', 'value': 8390}                    
+              ]
+            },
+            {
+              name: 'Health',
+              children:[
+                {'name': 'Applied Mathematics', 'value': 15651}, {'name': 'General Mathematics', 'value': 27764}, {'name': 'Miscellaneous Mathematics', 'value': 2591}, {'name': 'Probability & Statistics', 'value': 8382}                            
+              ]
+            }
+          ]
+        },
+
+        {name: 'Engineering',
+          children: [
+            {
+              name: 'Engineering and Technology',
+              children: [
+                {'name': 'Acoustics', 'value': 4426}, {'name': 'Applied Physics', 'value': 44272}, {'name': 'Chemical Physics', 'value': 17385}, {'name': 'Fluids & Plasmas', 'value': 6386}, {'name': 'General Physics', 'value': 58177}, {'name': 'Miscellaneous Physics', 'value': 1322}, {'name': 'Nuclear & Particle Physics', 'value': 23667}, {'name': 'Optics', 'value': 19660}, {'name': 'Solid State Physics', 'value': 20679}
+              ]
+            }
+          ]
+        },
+        
+        {name: 'Social Sciences',
+          children: [
+            {
+              name: 'Professional Fields',
+              children:[
+                {'name': 'Communication', 'value': 1792}, {'name': 'Education', 'value': 10116}, {'name': 'Information Science & Library Science', 'value': 4019}, {'name': 'Law', 'value': 4949}, {'name': 'Management', 'value': 17250}, {'name': 'Miscellaneous Professional Field', 'value': 1919}, {'name': 'Social Work', 'value': 1908}
+                ]
+            },
+            {
+              name:'Psychology',
+                children:[
+                    {'name': 'Behavioral Science & Complementary Psychology', 'value': 4769}, {'name': 'Clinical Psychology', 'value': 4651}, {'name': 'Developmental & Child Psychology', 'value': 4380}, {'name': 'Experimental Psychology', 'value': 5425}, {'name': 'General Psychology', 'value': 3947}, {'name': 'Human Factors', 'value': 1746}, {'name': 'Miscellaneous Psychology', 'value': 6231}, {'name': 'Psychoanalysis', 'value': 841}, {'name': 'Social Psychology', 'value': 4074}
+                ]
+            },
+            {
+              name:'Social Sciences',
+                  children:[
+                    {'name': 'Anthropology and Archaeology', 'value': 4439}, {'name': 'Area Studies', 'value': 3191}, {'name': 'Criminology', 'value': 1568}, {'name': 'Demography', 'value': 1040}, {'name': 'Economics', 'value': 16883}, {'name': 'General Social Sciences', 'value': 3994}, {'name': 'Geography', 'value': 3915}, {'name': 'International Relations', 'value': 2214}, {'name': 'Miscellaneous Social Sciences', 'value': 4100}, {'name': 'Planning & Urban Studies', 'value': 1597}, {'name': 'Political Science and Public Administration', 'value': 4911}, {'name': 'Science studies', 'value': 1571}, {'name': 'Sociology', 'value': 4932}
+                  ] 
+            }
+         ]
+       } 
+     ] 
+    };
+
+
+    chart.create(data);
+  </script>
+</body>
+</html>
