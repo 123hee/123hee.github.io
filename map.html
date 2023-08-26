@@ -29,10 +29,9 @@
     <input type="range" id="timeSlider" min="1973" max="2013" step="5" value="1973">
     <span id="timeLabel"></span>
     <button id="playButton">Play</button>
-    <p style="font-size: 15px; margin-left: 40px;margin-right: 40px;line-height: 1.5">1.The Chart can be customized based on a time axis and a selection box to choose the displayed discipline and time period. The time range is from 1973 to 2017, and for each five-year interval, the average number of papers is calculated to compute the RCA score. The last time period corresponds to 2013-2017.By clicking the play button, you can watch the dynamic changes of the selected discipline on a global scale.
+    <p style="font-size: 15px; margin-left: 40px;margin-right: 40px;line-height: 2">1.The Chart can be customized based on a time axis and a selection box to choose the displayed discipline and time period. The time range is from 1973 to 2017, and for each five-year interval, the average number of papers is calculated to compute the RCA score. The last time period corresponds to 2013-2017.By clicking the play button, you can watch the dynamic changes of the selected discipline on a global scale.
       <br>2.Through the map, we can observe the distribution of gray-colored LgRCA (Logarithm of RCA) for different countries in a specific time period and discipline. The gray color represents areas with no available data, which are marked accordingly.
       <br>3.The barChart displays the top ten countries ranked by RCA in the discipline for a given year. The values represent the lgRCA score.
-      <br>4.The RCA of country c in discipline i is defined as: RCAc,i=(P(c,i)/∑i P(c,i) ) /(∑ cP(c,i)/∑ c,i P(c,i)).P(c,i) is the number of publications produced and 'exported'—the number of publications indexed in the Web of Science—by country c in discipline i.∑i P(c,i) is the total number of publications produced by country c, ∑cP(c,i) is the total number of publications produced in a discipline globally.∑c,i P(c,i)is the total number of publications across all countries and disciplines.
     </p>
       <script>
         var worldGeoJSON;
