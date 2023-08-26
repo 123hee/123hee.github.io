@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paper Count Over Time</title>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+</head>
+
+<body>
+  <p style="font-size: 25px; font-weight: bold;text-align: center;">line chart</p>
+  <p style="font-size: 15px; margin-left: 40px;margin-right: 40px;line-height: 1.5">This line graph illustrats the global trend of total research paper count over time.</p>
+<script>
+    // 加载CSV文件
+    d3.csv("output.csv").then(data => {
+      // 处理数据：确保年份和论文数量是数值型数据
+      data.forEach(d => {
+        d["Étiquettes de lignes"] = +d["Étiquettes de lignes"];
+        d["Papers"] = +d["Papers"];
+      });
+      const width = 928;
+      const height = 500;
+      const marginTop = 20;
+      const marginRight = 30;
+      const marginBottom = 30;
+      const marginLeft = 70; // 增加了marginLeft的值
+
+      const x = d3.scaleLinear()
+          .domain(d3.extent(data, d => d["Étiquettes de lignes"]))
+          .range([marginLeft, width - marginRight]);
+
+      const y = d3.scaleLinear()
+          .domain([0, d3.max(data, d => d["Papers"])])
+          .range([height - marginBottom, marginTop]);
+
+      const line = d3.line()
+          .x(d => x(d["Étiquettes de lignes"]))
+          .y(d => y(d["Papers"]));
+
+      const svg = d3.create("svg")
+          .attr("width", width)
+          .attr("height", height)
+          .attr("viewBox", [0, 0, width, height])
+          .attr("style", "max-width: 100%; height: auto; height: intrinsic;");
+
+      svg.append("g")
+          .attr("transform", `translate(0,${height - marginBottom})`)
+          .call(d3.axisBottom(x).tickSizeOuter(0));
+
+      svg.append("g")
+          .attr("transform", `translate(${marginLeft},0)`)
+          .call(d3.axisLeft(y))
+          .call(g => g.select(".domain").remove())
+          .call(g => g.selectAll(".tick line").clone()
+              .attr("x2", width - marginLeft - marginRight)
+              .attr("stroke-opacity", 0.1))
+          .call(g => g.append("text")
+              .attr("x", -marginLeft + 20)  // 调整了y轴标签的位置
+              .attr("y", 10)
+              .attr("fill", "currentColor")
+              .attr("text-anchor", "start")
+              .text("↑ Papers"));
+
+      svg.append("path")
+          .attr("fill", "none")
+          .attr("stroke", "steelblue")
+          .attr("stroke-width", 1.5)
+          .attr("d", line(data));
+
+      document.body.appendChild(svg.node());
+    });
+</script>
+
+</body>
+
+</html>

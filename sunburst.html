@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sequences Sunburst</title>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <style>
+        .breadcrumb-bg {
+            fill: #f4f4f4; /* 背景色 */
+            stroke: #d4d4d4;
+            stroke-width: 1;
+        }
+        .breadcrumb-text:hover {
+            fill: #f5a623; /* 当悬停在文本上时的颜色 */
+        }
+        .container {
+            display: flex;
+            align-items: flex-start;
+        }
+        .sunburst {
+            flex-grow: 1;
+            margin-right: 0px;
+
+        }
+        .text {
+            margin-left: 0px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sunburst">
+            <p style="font-size: 25px; font-weight: bold;text-align: center;">Subject Hierarchy Sunburst Chart</p>
+            <script>
+                
+                console.log("Script started");
+                d3.json("hierarchical_data.json").then(hierarchical_data => {
+                    console.log(hierarchical_data); 
+                    const width = 600;
+                    const radius = width / 2;
+                    // 创建颜色映射
+
+
+                    // 创建颜色映射
+                    const categories = Array.from(new Set(hierarchical_data.children.map(d => d.name))); // 学科大类
+                    const subcategories = Array.from(new Set(hierarchical_data.children.flatMap(d => d.children.map(sub => sub.name)))); // 中级学科分类
+
+                    const colorScale1 = d3.scaleOrdinal().domain(categories).range(d3.schemeTableau10); 
+                    const colorScale2 = d3.scaleOrdinal().domain(subcategories).range([...d3.schemePastel1, ...d3.schemePastel2]); // 融合两个颜色方案以获取更多颜色
+
+                    const color = d => {
+                        switch(d.depth) {
+                            case 1:
+                                return colorScale1(d.data.name);
+                            case 2:
+                                return colorScale2(d.data.name);
+                            default:
+                                return "#999966"; // 对于深度为0或大于2的节点，颜色为黑色
+                        }
+                    };
+
+                    const partition = data => d3.partition().size([2 * Math.PI, radius * radius])(
+                        d3.hierarchy(data).sum(d => d.value).sort((a, b) => b.value - a.value)
+                    );
+                    const root = partition(hierarchical_data);          
+                    const svg = d3.create("svg")
+                        .attr("viewBox", `${-radius} ${-radius} ${width} ${width + 100}`)  // 增加50单位的垂直空间
+                        .style("max-width", `${width}px`)
+                        .style("font", "12px sans-serif");
+
+                    const breadcrumbs = svg.append("g")
+                        .attr("class", "breadcrumbs")
+                        .attr("transform", `translate(-${radius}, ${radius + 50})`);  // 将面包屑向下移动50单位
+                    console.log("Breadcrumbs created");
+
+                      // 添加中心标签 (新增)
+                    const label = svg.append("text")
+                        .attr("text-anchor", "middle")
+                        .attr("fill", "#888")
+                        .style("visibility", "hidden");
+                    // 定义arc
+                    const arc = d3.arc()
+                        .startAngle(d => d.x0)
+                        .endAngle(d => d.x1)
+                        .padAngle(1 / radius)
+                        .padRadius(radius)
+                        .innerRadius(d => Math.sqrt(d.y0))
+                        .outerRadius(d => Math.sqrt(d.y1) - 1);
+
+                    // 定义用于鼠标互动的arc
+                    const mousearc = d3.arc()
+                        .startAngle(d => d.x0)
+                        .endAngle(d => d.x1)
+                        .innerRadius(d => Math.sqrt(d.y0))
+                        .outerRadius(radius);
+
+                    const path = svg
+                        .append("g")
+                        .selectAll("path")
+                        .data(root.descendants().filter(d => d.depth && d.x1 - d.x0 > 0.001))
+                        .join("path")
+                        .attr("fill", d => color(d))
+                        .attr("d", arc);
+
+                    function updateBreadcrumbs(nodes) {
+                        // 先清除旧的面包屑
+                        breadcrumbs.selectAll("*").remove();
+                                
+                        let x = 0;
+                        nodes.forEach((d, i) => {
+                            const bread = breadcrumbs.append("g").attr("transform", `translate(${x}, 0)`);
+                                    
+                            bread.append("rect")
+                                .attr("width", d.data.name.length * 8 + 10) // 略微扩大背景宽度
+                                .attr("height", 25) // 设定一个固定高度
+                                .attr("fill", color(d.data.name))
+                                .attr("class", "breadcrumb-bg");  // 添加背景色
+                                
+                            bread.append("text")
+                                .attr("x", 5) // 略微向右偏移以适应面包屑框
+                                .attr("y", 18) // 垂直居中对齐
+                                .text(d.data.name)
+                                .attr("class", "breadcrumb-text"); // 添加交互样式
+                                    
+                            x += d.data.name.length * 8 + 10;  // 更新x，为下一个面包屑做准备
+                        });
+                    }
+
+                    svg.append("g")
+                        .attr("fill", "none")
+                        .attr("pointer-events", "all")
+                        .selectAll("path")
+                        .data(root.descendants().filter(d => d.depth && d.x1 - d.x0 > 0.001))
+                        .join("path")
+                        .attr("d", mousearc)
+                        .on("mouseenter", (event, d) => {
+                            const sequence = d.ancestors().reverse().slice(1);
+                            path.attr("fill-opacity", node => sequence.indexOf(node) >= 0 ? 1.0 : 0.3);
+                            const percentage = ((100 * d.value) / root.value).toPrecision(3);
+
+                            label.attr("y", -10)
+                            .style("visibility", null)
+                            .text(`${percentage}%`);
+
+                            updateBreadcrumbs(sequence);
+                        })
+                        .on("mouseleave", () => {
+                            path.attr("fill-opacity", 1); // 重置所有路径的fill-opacity
+                            label.style("visibility", "hidden");
+                            breadcrumbs.selectAll("*").remove();
+                        });
+                    document.querySelector(".sunburst").appendChild(svg.node());
+                });
+              
+            </script>
+        </div>
+        <div class="text">
+            <p style="font-size: 15px; font-weight: bold;line-height: 2"><br></br><br></br><br></br><br></br><br></br><br></br>The percentage of the blank space in the sunburst represents the proportion of the research papers.
+              <br></br>Hovering the mouse over it reveals the hierarchical classification of the subjects.
+            </p>
+        </div>
+    </div>
+</body>
+</html>
