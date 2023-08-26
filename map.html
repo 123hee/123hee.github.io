@@ -1,75 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <title>Interactive Data Visualization with Time Slider</title>
     <script src="https://d3js.org/d3.v6.min.js"></script>
     <style>
-        #map,
-        #barChart,
-        #lineChart,
-        #topSubjectsChart {
-            display: inline-block;
-            vertical-align: top;
-            border: 1px solid black;
-        }
-
-
+    #map,
+    #barChart,
+    #lineChart,
+    #topSubjectsChart {
+    display: inline-block;
+    vertical-align: top;
+    border: 1px solid black;
+    margin: 5px;
+    }
+    #timeSlider {
+        width: 240px;}
     </style>
 </head>
-
 <body>
-
+    <p style="font-size: 25px; font-weight: bold;text-align: center;">LgRCA of countries in different years and different disciplines.</p>
     <!-- Dropdown menu for subject selection -->
     <select id="subjectSelector">
         <!-- Options will be added dynamically from the data -->
     </select>
-
-    
-  
- 
-
     <svg id="map" width="600" height="400"></svg>
     <svg id="barChart" width="400" height="400"></svg>
-
-
     <input type="range" id="timeSlider" min="1973" max="2013" step="5" value="1973">
-<span id="timeLabel"></span>
-<button id="playButton">Play</button>
-
-    <script>
+    <span id="timeLabel"></span>
+    <button id="playButton">Play</button>
+    <p style="font-size: 15px; margin-left: 40px;margin-right: 40px;line-height: 1.5">1.The Chart can be customized based on a time axis and a selection box to choose the displayed discipline and time period. The time range is from 1973 to 2017, and for each five-year interval, the average number of papers is calculated to compute the RCA score. The last time period corresponds to 2013-2017.By clicking the play button, you can watch the dynamic changes of the selected discipline on a global scale.
+      <br>2.Through the map, we can observe the distribution of gray-colored LgRCA (Logarithm of RCA) for different countries in a specific time period and discipline. The gray color represents areas with no available data, which are marked accordingly.
+      <br>3.The barChart displays the top ten countries ranked by RCA in the discipline for a given year. The values represent the lgRCA score.
+      <br>4.The RCA of country c in discipline i is defined as: RCAc,i=(P(c,i)/∑i P(c,i) ) /(∑ cP(c,i)/∑ c,i P(c,i)).P(c,i) is the number of publications produced and 'exported'—the number of publications indexed in the Web of Science—by country c in discipline i.∑i P(c,i) is the total number of publications produced by country c, ∑cP(c,i) is the total number of publications produced in a discipline globally.∑c,i P(c,i)is the total number of publications across all countries and disciplines.
+    </p>
+      <script>
         var worldGeoJSON;
-
         d3.json("ave_total.json").then(function(data) {
         console.log(data);
-
-        
-  
         var subjects = [...new Set(data.map(d => d.subject))];
         var subjectSelector = d3.select("#subjectSelector");
         subjects.forEach(subject => {
             subjectSelector.append("option").text(subject).attr("value", subject);
         });
-
         var mapSVG = d3.select("#map");
         var barSVG = d3.select("#barChart");
         var topSubjectsChartSVG = d3.select("#topSubjectsChart");
-
         var projection = d3.geoMercator().scale(100).translate([300, 200]);
-
         d3.json("world.geojson").then(function(loadedGeoJSON) {
             worldGeoJSON = loadedGeoJSON;
             updateVisualization(subjects[0], 2014);
-        });
-
-
-        
+        });    
         var isPlaying = false;
         var currentYear = 2014;
         var timeSlider = d3.select("#timeSlider");
         var playButton = d3.select("#playButton");
-
         playButton.on("click", function() {
             isPlaying = !isPlaying;
             if (isPlaying) {
@@ -79,12 +64,10 @@
                 playButton.text("Play");
             }
         });
-
         timeSlider.on("input", function() {
     currentYear = +this.value;
     var selectedSubject = subjectSelector.property("value");
-    updateVisualization(selectedSubject, currentYear);
-    
+    updateVisualization(selectedSubject, currentYear); 
     // 更新日期标签
     var date = new Date(currentYear, 0, 1);
     var yearLabel = date.getFullYear();
@@ -107,7 +90,6 @@ document.getElementById("timeLabel").textContent = yearLabel;
                 playButton.text("Play");
             }
         }
-
         function updateVisualization(subject, year) {
             var filteredData = data.filter(d => d.subject === subject && d.year === year);
 
@@ -117,47 +99,38 @@ document.getElementById("timeLabel").textContent = yearLabel;
 
             countries.enter().append("path")
                 .attr("d", d3.geoPath().projection(projection))
-
                 .merge(countries)
                 .attr("fill", function(d) {
                     var countryData = filteredData.find(item => item.country === d.properties.NAME);
                     return countryData ? d3.scaleSequential(d3.interpolateBlues).domain([0, d3.max(filteredData, d => d.RCA)])(countryData.RCA) : "#ABB2B9";
                 });   
             // Update the bar chart
-            var topCountries = filteredData.sort((a, b) => b.RCA - a.RCA).slice(0, 10);
-
+var topCountries = filteredData.sort((a, b) => b.RCA - a.RCA).slice(0, 10);
 var yScale = d3.scaleBand()
   .domain(topCountries.map(d => d.country))
   .range([0, 400])
   .padding(0.1);
-
 var xScale = d3.scaleLinear()
   .domain([0, d3.max(topCountries, d => d.RCA)])
   .range([0, 400]);
-
 var bars = barSVG.selectAll("rect")
   .data(topCountries);
-
 bars.enter().append("rect")
   .merge(bars)
   .attr("y", d => yScale(d.country))
   .attr("width", d => xScale(d.RCA))
   .attr("height", yScale.bandwidth())
   .attr("fill", "steelblue");
-
 var labels = barSVG.selectAll("text")
   .data(topCountries);
-
 labels.enter().append("text")
   .merge(labels)
   .attr("y", d => yScale(d.country) + yScale.bandwidth() / 2)
   .attr("x", d => 0)
   .attr("dy", "0.50em")
   .text(d => d.country);
-
 var textLabels = barSVG.selectAll(".label")
   .data(topCountries);
-
 textLabels.enter().append("text")
   .merge(textLabels)
   .attr("class", "label")
@@ -165,7 +138,6 @@ textLabels.enter().append("text")
   .attr("y", d => yScale(d.country) + yScale.bandwidth() / 2)
   .attr("dy", "0.35em")
   .text(d => d.RCA.toFixed(2)); // Display the numerical value with two decimal places
-
             // 创建颜色比例尺图例
 var legend = mapSVG.append("g")
     .attr("class", "legend")
@@ -173,32 +145,25 @@ var legend = mapSVG.append("g")
 
 var colorScale = d3.scaleSequential(d3.interpolateBlues)
     .domain([0, d3.max(filteredData, d => d.RCA)]);
-
 var legendRectSize = 20;
 var legendSpacing = 10;
-
 var legendData = d3.range(0, d3.max(filteredData, d => d.RCA), 0.5);
-
 var legendRects = legend.selectAll("rect")
     .data(legendData);
-
 legendRects.enter().append("rect")
     .merge(legendRects)
     .attr("x", (d, i) => i * (legendRectSize + legendSpacing))
     .attr("width", legendRectSize)
     .attr("height", legendRectSize)
     .attr("fill", d => colorScale(d));
-
 var legendTexts = legend.selectAll("text")
     .data(legendData);
-
 legendTexts.enter().append("text")
     .merge(legendTexts)
     .attr("x", (d, i) => (i * (legendRectSize + legendSpacing)))
     .attr("y", legendRectSize + 10)
     .attr("dy", "0.5em")
     .text(d => d.toFixed(1));
-
 // 添加图例标题
 legend.append("text")
     .attr("x", -50)
@@ -206,8 +171,8 @@ legend.append("text")
     .text("lgRCA");
         }
     });
-
     </script>
 </body>
 
 </html>
+
