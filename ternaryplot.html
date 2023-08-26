@@ -2,14 +2,14 @@
 <html lang="en">
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"width=de>
         <title>position in simplex</title>
         <script src="https://d3js.org/d3.v7.min.js"></script>
         <script src="https://cdn.plot.ly/plotly-2.25.2.min.js"></script> 
     </head>
     <body>
-        <div style="width: 100%;">
-            <div id="L-chart-container" style="background-color: rgb(254, 254, 254);float:left;width:20%">
+        <div style="width: 100%; background-color:#ADD8E6">
+            <div id="L-chart-container" style="background-color: #ADD8E6;float:left;width:33%">
                 
                 <script>
                     
@@ -23,17 +23,17 @@
                             text: data.map(function(d) { return d.Country; }),
                             marker: {
                                 symbol: 100,
-                                color: '#DB7365',
+                                color: '#F4A460',
                                 size: 10,
                                 line: { width: 2 }
                             },
                         }], {
                             ternary: {
                                 sum: 1,
-                                aaxis: makeAxis('Natrual', 0),
+                                aaxis: makeAxis('Natural', 0),
                                 baxis: makeAxis('<br>Physical', 45),
-                                caxis: makeAxis('<br>Soietal', -45),
-                                bgcolor: '#fff1e0'
+                                caxis: makeAxis('<br>Societal', -45),
+                                bgcolor: '	white'
                             },
                             annotations: [{
                                 showarrow: false,
@@ -42,7 +42,7 @@
                                 y: 1.3,
                                 font: { size: 15 }
                             }],
-                            paper_bgcolor: '#fff1e0',
+                            paper_bgcolor: '#ADD8E6',
                         });
                         
                         function makeAxis(title, tickangle) {
@@ -60,7 +60,7 @@
                     });
                 </script>
             </div>
-            <div id="Lm-chart-container" style="background-color: rgb(254, 254, 254);float:left;width:20%" >
+            <div id="Lm-chart-container" style="background-color: #ADD8E6;float:left;width:33%" >
                 
                 <script>
                     
@@ -74,17 +74,17 @@
                             text: data.map(function(d) { return d.Country; }),
                             marker: {
                                 symbol: 100,
-                                color: '#DB7365',
+                                color: '#F4A460',
                                 size: 10,
                                 line: { width: 2 }
                             },
                         }], {
                             ternary: {
                                 sum: 1,
-                                aaxis: makeAxis('Natrual', 0),
+                                aaxis: makeAxis('Natural', 0),
                                 baxis: makeAxis('<br>Physical', 45),
-                                caxis: makeAxis('<br>Soietal', -45),
-                                bgcolor: '#fff1e0'
+                                caxis: makeAxis('<br>Societal', -45),
+                                bgcolor: 'white'
                             },
                             annotations: [{
                                 showarrow: false,
@@ -93,7 +93,7 @@
                                 y: 1.3,
                                 font: { size: 15 }
                             }],
-                            paper_bgcolor: '#fff1e0',
+                            paper_bgcolor: '#ADD8E6',
                         });
                         
                         function makeAxis(title, tickangle) {
@@ -111,7 +111,7 @@
                     });
                 </script>
             </div>
-            <div id="Um-chart-container" style="background-color: rgb(254, 254, 254);float:left;width:20%">
+            <div id="Um-chart-container" style="background-color: #ADD8E6;float:left;width:34%">
                 
                 <script>
                     
@@ -125,17 +125,17 @@
                             text: data.map(function(d) { return d.Country; }),
                             marker: {
                                 symbol: 100,
-                                color: '#DB7365',
+                                color: '#F4A460',
                                 size: 10,
                                 line: { width: 2 }
                             },
                         }], {
                             ternary: {
                                 sum: 1,
-                                aaxis: makeAxis('Natrual', 0),
+                                aaxis: makeAxis('Natural', 0),
                                 baxis: makeAxis('<br>Physical', 45),
-                                caxis: makeAxis('<br>Soietal', -45),
-                                bgcolor: '#fff1e0'
+                                caxis: makeAxis('<br>Societal', -45),
+                                bgcolor: 'white'
                             },
                             annotations: [{
                                 showarrow: false,
@@ -144,7 +144,7 @@
                                 y: 1.3,
                                 font: { size: 15 }
                             }],
-                            paper_bgcolor: '#fff1e0',
+                            paper_bgcolor: '#ADD8E6',
                         });
                         
                         function makeAxis(title, tickangle) {
@@ -162,7 +162,9 @@
                     });
                 </script>
             </div>
-            <div id="H-chart-container"style="background-color: rgb(254, 254, 254);float:left;width:20%">
+        </div>
+        <div style="background-color:#ADD8E6;float:left;width:100%">
+            <div id="H-chart-container"style="background-color: #ADD8E6;float:left;width:33%">
                 
                 <script>
                     
@@ -176,17 +178,17 @@
                             text: data.map(function(d) { return d.Country; }),
                             marker: {
                                 symbol: 100,
-                                color: '#DB7365',
+                                color: '#F4A460',
                                 size: 10,
                                 line: { width: 2 }
                             },
                         }], {
                             ternary: {
                                 sum: 1,
-                                aaxis: makeAxis('Natrual', 0),
+                                aaxis: makeAxis('Natural', 0),
                                 baxis: makeAxis('<br>Physical', 45),
-                                caxis: makeAxis('<br>Soietal', -45),
-                                bgcolor: '#fff1e0'
+                                caxis: makeAxis('<br>Societal', -45),
+                                bgcolor: 'white'
                             },
                             annotations: [{
                                 showarrow: false,
@@ -195,7 +197,7 @@
                                 y: 1.3,
                                 font: { size: 15 }
                             }],
-                            paper_bgcolor: '#fff1e0',
+                            paper_bgcolor: '#ADD8E6',
                         });
                         
                         function makeAxis(title, tickangle) {
@@ -214,7 +216,7 @@
                 </script>
             </div>
 
-            <div id="chart-container"style="background-color: rgb(254, 254, 254);float:left;width:20%">
+            <div id="chart-container"style="background-color:#ADD8E6;float:left;width:33%">
                 
                 <script>
                     
@@ -228,17 +230,17 @@
                             text: data.map(function(d) { return d.Country; }),
                             marker: {
                                 symbol: 100,
-                                color: '#DB7365',
+                                color: '#F4A460',
                                 size: 10,
                                 line: { width: 2 }
                             },
                         }], {
                             ternary: {
                                 sum: 1,
-                                aaxis: makeAxis('Natrual', 0),
+                                aaxis: makeAxis('Natural', 0),
                                 baxis: makeAxis('<br>Physical', 45),
-                                caxis: makeAxis('<br>Soietal', -45),
-                                bgcolor: '#fff1e0'
+                                caxis: makeAxis('<br>Societal', -45),
+                                bgcolor: '	white'
                             },
                             annotations: [{
                                 showarrow: false,
@@ -247,7 +249,7 @@
                                 y: 1.3,
                                 font: { size: 15 }
                             }],
-                            paper_bgcolor: '#fff1e0',
+                            paper_bgcolor: '#ADD8E6',
                         });
                         
                         function makeAxis(title, tickangle) {
@@ -265,6 +267,7 @@
                     });
                 </script>
             </div>
+            
         </div>
     </body>
 </html>
